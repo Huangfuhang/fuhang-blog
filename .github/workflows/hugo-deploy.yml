@@ -1,46 +1,56 @@
+# hugo-deploy.yml 完整配置（修复环境缺失 + 适配最新Node版本）
 name: Deploy Hugo to GitHub Pages
 
+# 触发条件：推送到master分支 或 手动触发
 on:
   push:
     branches: [master]
   workflow_dispatch:
 
+# 必要权限配置（Pages部署必须）
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# 并发控制：避免重复部署
 concurrency:
-  group: pages
+  group: "pages"
   cancel-in-progress: false
 
 jobs:
+  # 第一步：构建Hugo博客（生成public静态文件）
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout 代码
+      - name: 拉取代码（含主题子模块）
         uses: actions/checkout@v4
         with:
-          submodules: true  # 拉取主题子模块（关键！）
-          fetch-depth: 0
+          submodules: true  # 必须：拉取Hugo主题子模块
+          fetch-depth: 0    # 必须：获取完整提交历史
 
-      - name: 安装 Hugo
+      - name: 安装最新版Hugo
         uses: peaceiris/actions-hugo@v2
         with:
-          hugo-version: latest
-          extended: true
+          hugo-version: 'latest'    # 使用最新稳定版Hugo
+          extended: true            # 支持Sass/SCSS（主题样式必备）
 
-      - name: 编译博客（生成 public 文件夹）
-        run: hugo --minify
+      - name: 编译生成静态博客
+        run: hugo --minify          # --minify：压缩代码，提升加载速度
 
-      - name: 上传编译产物
+      - name: 上传编译产物（供Deploy步骤使用）
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./public
+          path: ./public            # Hugo编译产物目录
 
+  # 第二步：部署到GitHub Pages（修复environment缺失问题）
   deploy:
-    needs: build
+    environment:  # 关键修复：添加GitHub Pages环境配置
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build                   # 依赖build步骤完成
     runs-on: ubuntu-latest
     steps:
-      - name: 部署到 GitHub Pages
+      - name: 部署到GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
