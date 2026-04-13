@@ -1,0 +1,4 @@
+baseURL = "https://yourusername.github.io/"
+languageCode = "zh-CN"
+title = "富航技术博客"
+theme = "ananke"
