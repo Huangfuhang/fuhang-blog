@@ -1,4 +1,3 @@
-baseURL = "https://huangfuhang.github.io/fuhang-blog/"
+baseURL = "https://Huangfuhang.github.io/fuhang-blog/"
 languageCode = "zh-CN"
-title = "富航技术博客"
-theme = "ananke"
+title = "富航博客"  # 可自定义
